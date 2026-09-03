@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile and core metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique Firebase Authentication UID" },
+        "displayName": { "type": "string", "description": "User full display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "photoURL": { "type": "string", "description": "User profile avatar URL" },
+        "role": { "type": "string", "description": "Developer title or role" },
+        "organization": { "type": "string", "description": "Developer organization or company" },
+        "tier": { "type": "string", "description": "Subscription tier" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Profile initial creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Profile last update timestamp" },
+        "lastLoginAt": { "type": "string", "format": "date-time", "description": "User last authenticated login timestamp" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "User chat session metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Conversation unique ID" },
+        "userId": { "type": "string", "description": "Owner Firebase UID" },
+        "title": { "type": "string", "description": "Conversation title" },
+        "snippet": { "type": "string", "description": "Preview snippet of the conversation" },
+        "category": { "type": "string", "description": "Primary tech category (cloud, linux, code, database, devops, etc.)" },
+        "messageCount": { "type": "number", "description": "Total count of messages in conversation" },
+        "isPinned": { "type": "boolean", "description": "Whether conversation is pinned to top" },
+        "isArchived": { "type": "boolean", "description": "Whether conversation is archived" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last updated timestamp" }
+      },
+      "required": ["id", "userId", "title"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message in a conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Message unique identifier" },
+        "conversationId": { "type": "string", "description": "Parent conversation ID" },
+        "userId": { "type": "string", "description": "Owner Firebase UID" },
+        "role": { "type": "string", "enum": ["user", "assistant", "system"], "description": "Message sender role" },
+        "content": { "type": "string", "description": "Raw markdown or text message content" },
+        "codeBlocks": { "type": "array", "description": "Extracted code snippets with language and filename" },
+        "metadata": { "type": "object", "description": "Extensible execution metadata (model, latency, tokens, category)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "role", "content"]
+    },
+    "SavedKnowledgeItem": {
+      "title": "SavedKnowledgeItem",
+      "description": "User-saved architecture, code, and troubleshooting blueprint",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique knowledge item ID" },
+        "userId": { "type": "string", "description": "Owner Firebase UID" },
+        "title": { "type": "string", "description": "Knowledge blueprint title" },
+        "category": { "type": "string", "description": "Category classification" },
+        "categoryLabel": { "type": "string", "description": "Display label for category" },
+        "tags": { "type": "array", "description": "Searchable tag keywords" },
+        "description": { "type": "string", "description": "Context and problem description" },
+        "solutionSummary": { "type": "string", "description": "Root cause summary and solution steps" },
+        "codeSnippet": { "type": "object", "description": "Primary code or terminal command block" },
+        "keyTakeaways": { "type": "array", "description": "List of core takeaways" },
+        "starred": { "type": "boolean", "description": "Whether bookmarked/starred" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last updated timestamp" }
+      },
+      "required": ["id", "userId", "title", "description"]
+    },
+    "Workflow": {
+      "title": "Workflow",
+      "description": "Custom user-authored workflow template or agent sequence",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique workflow ID" },
+        "userId": { "type": "string", "description": "Owner Firebase UID" },
+        "name": { "type": "string", "description": "Workflow name" },
+        "category": { "type": "string", "description": "Workflow category classification" },
+        "iconName": { "type": "string", "description": "Lucide icon identifier" },
+        "description": { "type": "string", "description": "Workflow description" },
+        "prompt": { "type": "string", "description": "Primary prompt instructions" },
+        "promptTemplate": { "type": "string", "description": "Template text with parameterized placeholders" },
+        "systemInstruction": { "type": "string", "description": "Optional custom system instruction for Gemini" },
+        "model": { "type": "string", "description": "Preferred model configuration" },
+        "temperature": { "type": "number", "description": "Inference temperature (0.0 to 1.0)" },
+        "maxOutputTokens": { "type": "number", "description": "Max tokens to generate" },
+        "enabled": { "type": "boolean", "description": "Whether workflow is active/enabled" },
+        "inputPlaceholder": { "type": "string", "description": "Placeholder hint for custom user input" },
+        "tags": { "type": "array", "description": "Search tags" },
+        "difficulty": { "type": "string", "description": "Difficulty level" },
+        "estimatedTime": { "type": "string", "description": "Estimated runtime" },
+        "isCustom": { "type": "boolean", "description": "Flag marking user-created workflow" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User interface, theme, model preferences and privacy settings",
+      "type": "object",
+      "properties": {
+        "profile": { "type": "object", "description": "Profile override details" },
+        "appearance": { "type": "object", "description": "Theme, font, ligature preferences" },
+        "aiPreferences": { "type": "object", "description": "Model selection, system prompt, temperature defaults" },
+        "notifications": { "type": "object", "description": "Notification toggles" },
+        "privacy": { "type": "object", "description": "Retention and telemetry options" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last updated timestamp" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Root user document storing identity profile and metadata"
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "User-scoped technical chat sessions"
+    },
+    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Ordered messages for each user chat session"
+    },
+    "/users/{userId}/knowledge/{knowledgeId}": {
+      "schema": "SavedKnowledgeItem",
+      "description": "User-scoped saved technical blueprints and knowledge base"
+    },
+    "/users/{userId}/workflows/{workflowId}": {
+      "schema": "Workflow",
+      "description": "User-authored custom workflows"
+    },
+    "/users/{userId}/settings/preferences": {
+      "schema": "UserSettings",
+      "description": "User UI and configuration preferences"
+    }
+  }
+}
