@@ -47,6 +47,7 @@ import { KnowledgePage } from './pages/KnowledgePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
+import { SEO } from './components/SEO';
 import { Sidebar } from './components/layout/Sidebar';
 import { MobileHeader } from './components/layout/MobileHeader';
 import { ToastContainer, ToastMessage } from './components/ui/Toast';
@@ -55,7 +56,7 @@ import { sendChatMessage, ChatRequestHistoryItem, WorkflowExecutionConfig } from
 
 function CyvoraAppContent() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState<AppView>('workspace');
+  const [currentView, setCurrentView] = useState<AppView>('landing');
   
   // Firestore-backed state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -643,6 +644,7 @@ function CyvoraAppContent() {
   if (!isAuthenticated && isProtectedView) {
     return (
       <div className="min-h-screen bg-[#0A0A0B] text-slate-100 font-sans antialiased">
+        <SEO view="signin" />
         <SignInPage
           onNavigate={setCurrentView}
           onShowToast={showToast}
@@ -654,6 +656,7 @@ function CyvoraAppContent() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-slate-100 font-sans antialiased">
+      <SEO view={currentView} />
       {/* View Routing */}
       {currentView === 'landing' && (
         <LandingPage
