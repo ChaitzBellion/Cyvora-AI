@@ -22,13 +22,49 @@ interface SignInPageProps {
 }
 
 export const SignInPage: React.FC<SignInPageProps> = ({ onNavigate, onShowToast }) => {
-  const { signInWithGoogle, isConfigured } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, isConfigured } = useAuth();
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
 
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+    setErrorCode(null);
+    setIsEmailSubmitting(true);
+
+    try {
+      const result = mode === 'signup'
+        ? await signUpWithEmail(email.trim(), password, name.trim())
+        : await signInWithEmail(email.trim(), password);
+
+      if (result.success && result.user) {
+        onShowToast(
+          mode === 'signup' ? 'Account Created' : 'Signed In',
+          mode === 'signup' ? 'Your Cyvora AI account is ready.' : 'Welcome back to Cyvora AI.'
+        );
+        onNavigate('workspace');
+      } else if (result.error) {
+        setErrorCode(result.errorCode || null);
+        setErrorMessage(result.error);
+        onShowToast(mode === 'signup' ? 'Sign Up Failed' : 'Sign In Failed', result.error);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected authentication error occurred.';
+      setErrorMessage(message);
+      onShowToast(mode === 'signup' ? 'Sign Up Failed' : 'Sign In Failed', message);
+    } finally {
+      setIsEmailSubmitting(false);
+    }
+  };
 
   const handleCopyDomain = async () => {
     if (!currentHostname) return;
@@ -96,9 +132,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onNavigate, onShowToast 
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold mx-auto mb-3 shadow-sm">
               <Terminal className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Sign in to Cyvora AI</h1>
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              {mode === 'signup' ? 'Create your Cyvora AI account' : 'Sign in to Cyvora AI'}
+            </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Real-time Copilot &bull; Authenticate with your Google account
+              {mode === 'signup'
+                ? 'Create an account to get started with your AI copilot'
+                : 'Real-time Copilot &bull; Sign in with Google or email'}
             </p>
           </div>
 
@@ -161,12 +201,93 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onNavigate, onShowToast 
             </div>
           )}
 
+          <form onSubmit={handleEmailSubmit} className="space-y-3 mb-5">
+            {mode === 'signup' && (
+              <label className="block">
+                <span className="sr-only">Name</span>
+                <input
+                  type="text"
+                  name="name"
+                  autoComplete="name"
+                  required
+                  maxLength={80}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Your name"
+                  className="w-full px-4 py-3 rounded-xl bg-[#09090B] border border-[#1E293B] text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-500"
+                />
+              </label>
+            )}
+            <label className="block">
+              <span className="sr-only">Email address</span>
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email address"
+                className="w-full px-4 py-3 rounded-xl bg-[#09090B] border border-[#1E293B] text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-500"
+              />
+            </label>
+            <label className="block">
+              <span className="sr-only">Password</span>
+              <input
+                type="password"
+                name="password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                required
+                minLength={6}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={mode === 'signup' ? 'Password (at least 6 characters)' : 'Password'}
+                className="w-full px-4 py-3 rounded-xl bg-[#09090B] border border-[#1E293B] text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-500"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={isEmailSubmitting || isGoogleSigningIn}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-sm font-bold transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isEmailSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{mode === 'signup' ? 'Creating account...' : 'Signing in...'}</span>
+                </>
+              ) : (
+                mode === 'signup' ? 'Create account' : 'Sign in with email'
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-slate-400 mb-5">
+            {mode === 'signup' ? 'Already have an account?' : 'New to Cyvora AI?'}{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(mode === 'signup' ? 'signin' : 'signup');
+                setErrorMessage(null);
+                setErrorCode(null);
+              }}
+              className="text-cyan-300 hover:text-cyan-200 font-semibold cursor-pointer"
+            >
+              {mode === 'signup' ? 'Sign in' : 'Create an account'}
+            </button>
+          </p>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-[#1E293B]" />
+            <span className="text-[10px] font-mono uppercase text-slate-500">or continue with</span>
+            <div className="flex-1 h-px bg-[#1E293B]" />
+          </div>
+
           {/* Google Sign In Button */}
           <div className="space-y-3 mb-6">
             <button
               id="google-signin-btn"
               onClick={handleGoogleLogin}
-              disabled={isGoogleSigningIn}
+              disabled={isGoogleSigningIn || isEmailSubmitting}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white hover:bg-slate-100 text-black text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isGoogleSigningIn ? (

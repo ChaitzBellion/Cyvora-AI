@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { 
   signInWithGoogle as firebaseSignInWithGoogle, 
+  signInWithEmail as firebaseSignInWithEmail,
+  signUpWithEmail as firebaseSignUpWithEmail,
   signOutUser, 
   subscribeToAuthChanges, 
   AuthResult 
@@ -14,6 +16,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isConfigured: boolean;
   signInWithGoogle: () => Promise<AuthResult>;
+  signInWithEmail: (email: string, password: string) => Promise<AuthResult>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
 }
 
@@ -39,6 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await firebaseSignInWithGoogle();
   };
 
+  const signInWithEmail = async (email: string, password: string): Promise<AuthResult> => {
+    return await firebaseSignInWithEmail(email, password);
+  };
+
+  const signUpWithEmail = async (email: string, password: string, displayName: string): Promise<AuthResult> => {
+    return await firebaseSignUpWithEmail(email, password, displayName);
+  };
+
   const logout = async (): Promise<void> => {
     await signOutUser();
   };
@@ -49,6 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: Boolean(user),
     isConfigured: isFirebaseConfigured,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     logout
   };
 

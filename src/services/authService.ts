@@ -2,6 +2,9 @@ import {
   signInWithPopup, 
   signOut, 
   onAuthStateChanged, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
   User, 
   Unsubscribe,
   AuthError
@@ -18,6 +21,78 @@ export interface AuthResult {
 }
 
 let isSigningInInProgress = false;
+
+function getEmailAuthErrorMessage(error: AuthError): string {
+  switch (error.code) {
+    case 'auth/email-already-in-use':
+      return 'An account already exists with this email. Sign in instead.';
+    case 'auth/invalid-email':
+      return 'Enter a valid email address.';
+    case 'auth/weak-password':
+      return 'Choose a stronger password with at least 6 characters.';
+    case 'auth/invalid-credential':
+      return 'The email or password is incorrect.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/network-request-failed':
+      return 'Network connection issue. Please check your internet connection.';
+    case 'auth/operation-not-allowed':
+      return 'Email and password sign-in is not enabled for this Firebase project. Enable it in Firebase Authentication settings.';
+    default:
+      return error.message || 'Authentication failed. Please try again.';
+  }
+}
+
+export async function signUpWithEmail(email: string, password: string, displayName: string): Promise<AuthResult> {
+  if (!isFirebaseConfigured || !auth) {
+    return {
+      success: false,
+      user: null,
+      errorCode: 'config_missing',
+      error: 'Firebase is not yet configured. Please set the VITE_FIREBASE_* environment variables.'
+    };
+  }
+
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(result.user, { displayName });
+    return { success: true, user: result.user };
+  } catch (err: unknown) {
+    const error = err as AuthError;
+    console.warn(`Firebase Email Sign-Up (${error.code || 'unknown'}):`, error.message);
+    return {
+      success: false,
+      user: null,
+      errorCode: error.code,
+      error: getEmailAuthErrorMessage(error)
+    };
+  }
+}
+
+export async function signInWithEmail(email: string, password: string): Promise<AuthResult> {
+  if (!isFirebaseConfigured || !auth) {
+    return {
+      success: false,
+      user: null,
+      errorCode: 'config_missing',
+      error: 'Firebase is not yet configured. Please set the VITE_FIREBASE_* environment variables.'
+    };
+  }
+
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return { success: true, user: result.user };
+  } catch (err: unknown) {
+    const error = err as AuthError;
+    console.warn(`Firebase Email Sign-In (${error.code || 'unknown'}):`, error.message);
+    return {
+      success: false,
+      user: null,
+      errorCode: error.code,
+      error: getEmailAuthErrorMessage(error)
+    };
+  }
+}
 
 /**
  * Initiates Google Sign-In with Firebase Popup Authentication.
